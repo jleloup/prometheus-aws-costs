@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/rs/zerolog"
@@ -65,5 +64,5 @@ func main() {
 	zerolog.SetGlobalLevel(level)
 
 	// Core functionality
-	fmt.Println("Hello, World!")
+	log.Info().Msg("Hello world !!")
 }

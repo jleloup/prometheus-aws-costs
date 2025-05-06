@@ -61,3 +61,6 @@ spec:
           ports:
             - name: http-metrics
               containerPort: {{ $.Values.observability.metricsPort }}
+          envFrom:
+          - configMapRef:
+              name: {{ include "pac.common.name" . }}

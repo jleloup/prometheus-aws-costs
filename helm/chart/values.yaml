@@ -1,25 +1,34 @@
-replicaCount: 1
+---
+# -- Global values
 global:
+  # -- Image configuration
   image:
     registry: docker.io
     repository: prometheus-aws-costs
     tag: latest
 
 nameOverride: ""
+fullnameOverride: ""
 
+# -- Number of replicas to run
+replicaCount: 1
+
+# -- Map of labels applied to all resources
 labels: {}
+
+# -- Map of annotations applied to all resources
 annotations: {}
 
+# -- COnfigure observability
 observability:
   metricsPort: "11223"
   scrapeInterval: "15s"
   path: "/metrics"
 
+# -- Configure container
 container:
   commands:
     - "/go/bin/prometheus-aws-costs"
-
-statuspageSecretName: secrets
 
 # -- Node selector for nodes to schedule the pod on
 nodeSelector: {}
