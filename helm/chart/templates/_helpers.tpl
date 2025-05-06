@@ -67,7 +67,10 @@ Provide an Fully Qualified Image name from an application name & values.
 {{/*
 Security context for pods
 */}}
-{{- define "pac.common.securityContext" }}
+{{/*
+Security context for pods
+*/}}
+{{- define "pac.pod.securityContext" }}
 securityContext:
   fsGroup: 1337
   runAsUser: 1337
