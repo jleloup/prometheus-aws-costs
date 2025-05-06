@@ -1,0 +1,31 @@
+replicaCount: 1
+global:
+  image:
+    registry: docker.io
+    repository: prometheus-aws-costs
+    tag: latest
+
+nameOverride: ""
+
+labels: {}
+annotations: {}
+
+observability:
+  metricsPort: "11223"
+  scrapeInterval: "15s"
+  path: "/metrics"
+
+container:
+  commands:
+    - "/go/bin/prometheus-aws-costs"
+
+statuspageSecretName: secrets
+
+# -- Node selector for nodes to schedule the pod on
+nodeSelector: {}
+
+# -- Tolerations to schedule the pod on tainted nodes
+tolerations: []
+
+## -- Node Affinity
+nodeAffinity: {}

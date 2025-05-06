@@ -1,0 +1,18 @@
+---
+apiVersion: skaffold/v4beta11
+kind: Config
+# Build docker image into ECR using date tag policy
+build:
+  local:
+    push: true
+  tagPolicy:
+    sha256: {}
+
+# Deploy to current kubernetes cluster the docker image built above
+deploy:
+  helm:
+    releases:
+      - name: prometheus-aws-costs
+        namespace: default
+        chartPath: helm/chart
+        valuesFiles: ["values-dev.yaml"]

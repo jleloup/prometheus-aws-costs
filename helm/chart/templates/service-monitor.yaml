@@ -1,0 +1,19 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ include "pac.common.name" . }}-service-monitor
+  labels:
+    {{- include "pac.common.labels" $ | nindent 4 }}
+    {{- with $.Values.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+    app.kubernetes.io/component: {{ include "pac.common.name" . }}
+    prometheus: kps-prometheus
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: {{ include "pac.common.name" . }}
+  endpoints:
+    - port: http-metrics
+      path: "{{ .Values.observability.path }}"
+      interval: "{{ .Values.observability.scrapeInterval }}"
