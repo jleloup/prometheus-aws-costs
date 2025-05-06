@@ -57,11 +57,17 @@ Provide an Fully Qualified Image name from an application name & values.
 {{- $appValues := get .context.Values .name -}}
 {{- $registry := $appValues.image.registry | default .context.Values.global.image.registry -}}
 {{- $tag := $appValues.image.tag | default .context.Values.global.image.tag -}}
-{{- if $appValues.image.sha }}
-{{- printf "%s/%s@sha256:%s" $registry $appValues.image.repository $appValues.image.sha }}
-{{- else }}
-{{- printf "%s/%s:%s" $registry $appValues.image.repository $tag }}
+
+{{- if $registry }}
+{{- $registry := printf "%s/" $registry -}}
 {{- end }}
+
+{{- if $appValues.image.sha }}
+{{- printf "%s%s@sha256:%s" $registry $appValues.image.repository $appValues.image.sha }}
+{{- else }}
+{{- printf "%s%s:%s" $registry $appValues.image.repository $tag }}
+{{- end }}
+
 {{- end -}}
 
 {{/*

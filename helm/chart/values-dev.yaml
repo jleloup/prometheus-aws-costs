@@ -1,3 +1,13 @@
 ---
 nameOverride: "pac-test"
 fullnameOverride: "pac-test"
+
+global:
+  # -- Image configuration
+  image:
+    registry: ""
+    repository: prometheus-aws-costs
+    tag: latest
+
+observability:
+  enabled: false

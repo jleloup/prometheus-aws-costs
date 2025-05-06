@@ -19,8 +19,9 @@ labels: {}
 # -- Map of annotations applied to all resources
 annotations: {}
 
-# -- COnfigure observability
+# -- Configure observability
 observability:
+  enabled: true
   metricsPort: "11223"
   scrapeInterval: "15s"
   path: "/metrics"

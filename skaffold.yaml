@@ -3,12 +3,20 @@ apiVersion: skaffold/v4beta13
 kind: Config
 metadata:
   name: prometheus-aws-costs
-build: {}
+build:
+  local:
+    push: false
+    useDockerCLI: true
+  artifacts:
+    - image: prometheus-aws-costs
+      context: .
+      docker:
+        dockerfile: Dockerfile
 deploy:
   helm:
     releases:
       - name: prometheus-aws-costs
         chartPath: helm/chart
         valuesFiles:
-          - helm/chart/values.yaml
+          - helm/chart/values-dev.yaml
         version: 0.1.0
