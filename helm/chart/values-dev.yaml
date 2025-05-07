@@ -11,6 +11,7 @@ global:
 
 config:
   METRIC_INTERVAL: "30s"
+  LOG_LEVEL: "debug"
 
 observability:
   enabled: false

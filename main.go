@@ -1,10 +1,16 @@
 package main
 
 import (
+	"context"
+	"fmt"
 	"net/http"
 	"sync"
 	"time"
 
+	pacCostExplorer "prometheus-aws-costs/src/aws/costexplorer"
+
+	awsConfig "github.com/aws/aws-sdk-go-v2/config"
+	awsCostexplorer "github.com/aws/aws-sdk-go-v2/service/costexplorer"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
@@ -79,12 +85,24 @@ func main() {
 		log.Fatal().Err(http.ListenAndServe(":"+config.MetricsPort, nil)).Msg("Prometheus HTTP server failed")
 	}()
 
+	// Setup AWS client
+	ctx := context.Background()
+	sdkConfig, err := awsConfig.LoadDefaultConfig(ctx)
+	if err != nil {
+		fmt.Println("Couldn't load default configuration. Have you set up your AWS account?")
+		fmt.Println(err)
+		return
+	}
+	ceClient := awsCostexplorer.NewFromConfig(sdkConfig)
+
 	// Loop on AWS queries
 	ticker := time.NewTicker(config.MetricInterval)
 	for ; true; <-ticker.C {
 		var wg sync.WaitGroup
 
-		log.Info().Msg("Refreshing AWS Cost explorer metrics")
+		log.Debug().Msg("Refreshing AWS Cost explorer metrics")
+
+		pacCostExplorer.LoadSavingPlans(*ceClient)
 
 		wg.Wait()
 	}
