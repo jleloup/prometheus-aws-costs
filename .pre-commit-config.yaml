@@ -1,0 +1,32 @@
+default_stages: [commit]
+fail_fast: true
+
+repos:
+  ##########################
+  # SemVer & Commits hooks #
+  ##########################
+
+  - repo: https://github.com/commitizen-tools/commitizen
+    rev: v4.6.3
+    hooks:
+      - id: commitizen
+        # Don't forget to run pre-commit install --hook-type commit-msg for this hook to run
+        stages: [commit-msg]
+
+  ###################
+  # Helm & Go hooks #
+  ###################
+
+  - repo: https://github.com/norwoodj/helm-docs
+    rev: "v1.11.3"
+    hooks:
+      - id: helm-docs
+        args:
+          - --chart-search-root=helm/chart
+
+  - repo: https://github.com/gruntwork-io/pre-commit
+    rev: v0.1.29
+    hooks:
+      - id: helmlint
+      - id: gofmt
+      - id: golangci-lint
