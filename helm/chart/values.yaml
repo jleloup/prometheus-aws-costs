@@ -19,11 +19,14 @@ labels: {}
 # -- Map of annotations applied to all resources
 annotations: {}
 
+# -- Prometheus AWS Costs configuration used as environment variable
+config: {}
+
 # -- Configure observability
 observability:
   enabled: true
   metricsPort: "11223"
-  scrapeInterval: "15s"
+  scrapeInterval: "10m"
   path: "/metrics"
 
 # -- Configure container

@@ -9,5 +9,8 @@ global:
     repository: prometheus-aws-costs
     tag: latest
 
+config:
+  METRIC_INTERVAL: "30s"
+
 observability:
   enabled: false

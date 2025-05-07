@@ -1,8 +1,11 @@
 package main
 
 import (
+	"net/http"
+	"sync"
 	"time"
 
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/viper"
@@ -12,6 +15,7 @@ import (
 type Config struct {
 	LogLevel       string        `mapstructure:"log_level"`
 	MetricInterval time.Duration `mapstructure:"metric_interval"`
+	MetricsPath    string        `mapstructure:"metrics_path"`
 	MetricsPort    string        `mapstructure:"metrics_port"`
 }
 
@@ -22,7 +26,8 @@ func LoadConfig() (config Config, err error) {
 
 	// Load config
 	log.Debug().Msg("Loading environment variables...")
-	v.SetDefault("metric_interval", "30s")
+	v.SetDefault("metric_interval", "30m")
+	v.SetDefault("metrics_path", "/metrics")
 	v.SetDefault("metrics_port", "11223")
 	v.SetDefault("log_level", "info")
 	v.AutomaticEnv()
@@ -63,6 +68,24 @@ func main() {
 	}
 	zerolog.SetGlobalLevel(level)
 
-	// Core functionality
-	log.Info().Msg("Hello world !!")
+	// Start Prometheus server
+	log.Info().
+		Str("path", config.MetricsPath).
+		Str("port", config.MetricsPort).
+		Msg("Start Prometheus listener")
+
+	go func() {
+		http.Handle(config.MetricsPath, promhttp.Handler())
+		log.Fatal().Err(http.ListenAndServe(":"+config.MetricsPort, nil)).Msg("Prometheus HTTP server failed")
+	}()
+
+	// Loop on AWS queries
+	ticker := time.NewTicker(config.MetricInterval)
+	for ; true; <-ticker.C {
+		var wg sync.WaitGroup
+
+		log.Info().Msg("Refreshing AWS Cost explorer metrics")
+
+		wg.Wait()
+	}
 }
