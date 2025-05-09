@@ -36,7 +36,7 @@ func (e *CostExplorerFetcher) GetSavingPlansMetrics(ctx context.Context) {
 	defer span.End()
 
 	now := time.Now()
-	nowStr := now.Format("2052-05-09")
+	nowStr := now.Format(time.DateOnly)
 
 	output, err := e.client.GetSavingsPlansUtilization(ctx, &awsCostexplorer.GetSavingsPlansUtilizationInput{
 		TimePeriod: &types.DateInterval{

@@ -66,3 +66,7 @@ spec:
           envFrom:
           - configMapRef:
               name: {{ include "self.common.name" . }}
+          resources:
+            {{- with .Values.resources }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}

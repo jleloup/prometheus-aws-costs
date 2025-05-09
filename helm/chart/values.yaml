@@ -23,6 +23,13 @@ labels: {}
 # -- Map of annotations applied to all resources
 annotations: {}
 
+resources:
+  cpu:
+    request: 50m
+  memory:
+    limit: 256Mi
+    request: 256Mi
+
 # -- Prometheus AWS Costs configuration used as environment variable
 config: {}
 

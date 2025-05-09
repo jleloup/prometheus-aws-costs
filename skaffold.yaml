@@ -21,7 +21,7 @@ deploy:
         valuesFiles:
           - helm/chart/values-dev.yaml
         version: 0.1.0
-        namespace: monitoring
+        namespace: monitoring-exporters
         createNamespace: true
         setValueTemplates:
           global:
