@@ -15,6 +15,7 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/viper"
+	"go.opentelemetry.io/otel"
 )
 
 // Config for auth creds
@@ -24,6 +25,8 @@ type Config struct {
 	MetricsPath    string        `mapstructure:"metrics_path"`
 	MetricsPort    string        `mapstructure:"metrics_port"`
 }
+
+var tracer = otel.Tracer("prometheus-aws-costs/main")
 
 // Deal with configuration using environment variables,
 // default values and CLI
@@ -95,14 +98,18 @@ func main() {
 	}
 	ceClient := awsCostexplorer.NewFromConfig(sdkConfig)
 
+	ceFetcher := pacCostExplorer.NewCEFetcher(ctx, *ceClient)
+
 	// Loop on AWS queries
 	ticker := time.NewTicker(config.MetricInterval)
 	for ; true; <-ticker.C {
 		var wg sync.WaitGroup
+		_, span := tracer.Start(ctx, "refresh-metrics")
+		defer span.End()
 
 		log.Debug().Msg("Refreshing AWS Cost explorer metrics")
 
-		pacCostExplorer.LoadSavingPlans(*ceClient)
+		ceFetcher.GetSavingPlansMetrics(ctx)
 
 		wg.Wait()
 	}
