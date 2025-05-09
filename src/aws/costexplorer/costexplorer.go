@@ -24,8 +24,9 @@ func NewCEFetcher(context context.Context, client awsCostexplorer.Client) *CostE
 }
 
 type CostExplorerFetcher struct {
-	ctx    context.Context
-	client awsCostexplorer.Client
+	ctx        context.Context
+	client     awsCostexplorer.Client
+	statistics Statistics
 }
 
 func (e *CostExplorerFetcher) GetSavingPlansMetrics(ctx context.Context) {
@@ -51,5 +52,6 @@ func (e *CostExplorerFetcher) GetSavingPlansMetrics(ctx context.Context) {
 			Msg("Cannot fetch Saving Plans utilization")
 	}
 
+	e.statistics.CostExplorerAPICall++
 	log.Debug().Interface("dict", output).Msg("Saving Plans utilization output")
 }
