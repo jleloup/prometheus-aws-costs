@@ -24,11 +24,11 @@ labels: {}
 annotations: {}
 
 resources:
-  cpu:
-    request: 50m
-  memory:
-    limit: 256Mi
-    request: 256Mi
+  limits:
+    memory: 256Mi
+  requests:
+    cpu: 50m
+    memory: 256Mi
 
 # -- Prometheus AWS Costs configuration used as environment variable
 config: {}

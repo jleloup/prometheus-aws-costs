@@ -20,9 +20,9 @@ A Helm chart to deploy Prometheus AWS Costs exporter in Kubernetes.
 | nodeSelector | object | `{}` | Node selector for nodes to schedule the pod on |
 | observability | object | `{"enabled":true,"metricsPort":"11223","path":"/metrics","scrapeInterval":"10m"}` | Configure observability |
 | replicaCount | int | `1` | Number of replicas to run |
-| resources.cpu.request | string | `"50m"` |  |
-| resources.memory.limit | string | `"256Mi"` |  |
-| resources.memory.request | string | `"256Mi"` |  |
+| resources.limits.memory | string | `"256Mi"` |  |
+| resources.requests.cpu | string | `"50m"` |  |
+| resources.requests.memory | string | `"256Mi"` |  |
 | serviceAccount | object | `{"annotations":{}}` | Service Account configuration |
 | serviceAccount.annotations | object | `{}` | Service Account annotations. Useful for IRSA. |
 | tolerations | list | `[]` | Tolerations to schedule the pod on tainted nodes |
