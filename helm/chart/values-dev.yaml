@@ -2,12 +2,6 @@
 nameOverride: "pac-test"
 fullnameOverride: "pac-test"
 
-global:
-  image:
-    registry: ""
-    repository: prometheus-aws-costs
-    tag: latest
-
 config:
   METRIC_INTERVAL: "30s"
   LOG_LEVEL: "debug"

@@ -5,11 +5,12 @@ metadata:
   name: prometheus-aws-costs
 build:
   local:
-    push: false
+    push: true
     useDockerCLI: true
+  tagPolicy:
+    gitCommit: {}
   artifacts:
-    - image: prometheus-aws-costs
-      context: .
+    - image: docker.io/jleloup/prometheus-aws-costs
       docker:
         dockerfile: Dockerfile
 deploy:
@@ -20,3 +21,10 @@ deploy:
         valuesFiles:
           - helm/chart/values-dev.yaml
         version: 0.1.0
+        namespace: monitoring
+        createNamespace: true
+        setValueTemplates:
+          global:
+            image:
+              repository: "{{.IMAGE_REPO_docker_io_jleloup_prometheus_aws_costs}}"
+              tag: "{{.IMAGE_TAG_docker_io_jleloup_prometheus_aws_costs}}@{{.IMAGE_DIGEST_docker_io_jleloup_prometheus_aws_costs}}"

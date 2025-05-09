@@ -3,8 +3,7 @@
 global:
   # -- Image configuration
   image:
-    registry: docker.io
-    repository: prometheus-aws-costs
+    repository: docker.io/jleloup/prometheus-aws-costs
     tag: latest
 
 nameOverride: ""

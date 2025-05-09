@@ -49,23 +49,16 @@ app.kubernetes.io/instance: {{ include "pac.common.fullname" . | quote }}
 {{/*
 Provide an Fully Qualified Image name from an application name & values.
 {{ include "pac.container.image" (dict "name" "app" "context" $) }}
-- Image registry = either `"app".image.registry` or `global.image.registry`
-- Image repository = `"app".image.repository`
-- Image tag =
 */}}
 {{- define "pac.container.image" -}}
 {{- $appValues := get .context.Values .name -}}
-{{- $registry := $appValues.image.registry | default .context.Values.global.image.registry -}}
+{{- $repository := $appValues.image.repository | default .context.Values.global.image.repository -}}
 {{- $tag := $appValues.image.tag | default .context.Values.global.image.tag -}}
 
-{{- if $registry }}
-{{- $registry := printf "%s/" $registry -}}
-{{- end }}
-
 {{- if $appValues.image.sha }}
-{{- printf "%s%s@sha256:%s" $registry $appValues.image.repository $appValues.image.sha }}
+{{- printf "%s@sha256:%s" $repository $appValues.image.sha }}
 {{- else }}
-{{- printf "%s%s:%s" $registry $appValues.image.repository $tag }}
+{{- printf "%s:%s" $repository $tag }}
 {{- end }}
 
 {{- end -}}
