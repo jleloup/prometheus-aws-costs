@@ -23,6 +23,7 @@ labels: {}
 # -- Map of annotations applied to all resources
 annotations: {}
 
+# -- Pod resources
 resources:
   limits:
     memory: 256Mi
