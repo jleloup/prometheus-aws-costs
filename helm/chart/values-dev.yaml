@@ -1,7 +1,7 @@
 ---
 serviceAccount:
   annotations:
-    eks.amazonaws.com/role-arn: arn:aws:iam::USE_YOUR_ROLE_ARN
+    eks.amazonaws.com/role-arn: arn:aws:iam::463175827646:role/prometheus-aws-costs-eks-sandbox-01
 
 config:
   METRIC_INTERVAL: "30s"
