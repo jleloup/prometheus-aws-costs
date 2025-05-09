@@ -1,10 +1,8 @@
 ---
-nameOverride: "pac-test"
-fullnameOverride: "pac-test"
+serviceAccount:
+  annotations:
+    eks.amazonaws.com/role-arn: arn:aws:iam::USE_YOUR_ROLE_ARN
 
 config:
   METRIC_INTERVAL: "30s"
   LOG_LEVEL: "debug"
-
-observability:
-  enabled: false

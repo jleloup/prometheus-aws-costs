@@ -1,13 +1,13 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "pac.common.name" $ }}
+  name: {{ include "self.common.name" $ }}
   labels:
-    {{- include "pac.common.labels" $ | nindent 4 }}
+    {{- include "self.common.labels" $ | nindent 4 }}
     {{- with $.Values.labels }}
     {{- toYaml . | nindent 4 }}
     {{- end }}
-    app.kubernetes.io/component: {{ include "pac.common.name" $ }}
+    app.kubernetes.io/component: {{ include "self.common.name" $ }}
   annotations:
     {{- with $.Values.annotations }}
     {{- toYaml . | nindent 4 }}
@@ -22,8 +22,8 @@ spec:
       maxSurge: '25%'
   selector:
     matchLabels:
-      {{- include "pac.common.matchLabels" $ | nindent 6 }}
-      app.kubernetes.io/component: {{ include "pac.common.name" $ }}
+      {{- include "self.common.matchLabels" $ | nindent 6 }}
+      app.kubernetes.io/component: {{ include "self.common.name" $ }}
   template:
     metadata:
       {{- with .Values.annotations }}
@@ -31,13 +31,15 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       labels:
-        {{- include "pac.common.labels" $ | nindent 8 }}
+        {{- include "self.common.labels" $ | nindent 8 }}
         {{- with $.Values.labels }}
         {{- toYaml . | nindent 8}}
         {{- end }}
-        app.kubernetes.io/component: {{ include "pac.common.name" $ }}
+        app.kubernetes.io/component: {{ include "self.common.name" $ }}
     spec:
-      {{- include "pac.pod.securityContext" $ | indent 6 }}
+      serviceAccountName: {{ include "self.common.name" $ }}
+      automountServiceAccountToken: false
+      {{- include "self.pod.securityContext" $ | indent 6 }}
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
@@ -52,8 +54,8 @@ spec:
           {{- toYaml . | nindent 10 }}
       {{- end }}
       containers:
-        - name: {{ include "pac.common.name" $ }}
-          image: {{ include "pac.container.image"  (dict "name" "global" "context" $) }}
+        - name: {{ include "self.common.name" $ }}
+          image: {{ include "self.container.image"  (dict "name" "global" "context" $) }}
           command: {{- toYaml .Values.container.commands | nindent 12 }}
           {{- with .Values.container.args }}
           args: {{- toYaml . | nindent 12 }}
@@ -63,4 +65,4 @@ spec:
               containerPort: {{ $.Values.observability.metricsPort }}
           envFrom:
           - configMapRef:
-              name: {{ include "pac.common.name" . }}
+              name: {{ include "self.common.name" . }}

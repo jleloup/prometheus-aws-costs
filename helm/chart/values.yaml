@@ -9,6 +9,11 @@ global:
 nameOverride: ""
 fullnameOverride: ""
 
+# -- Service Account configuration
+serviceAccount:
+  # -- Service Account annotations. Useful for IRSA.
+  annotations: {}
+
 # -- Number of replicas to run
 replicaCount: 1
 
