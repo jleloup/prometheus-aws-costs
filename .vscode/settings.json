@@ -4,5 +4,8 @@
     "golangci",
     "helmlint",
     "promhttp"
+  ],
+  "cSpell.ignoreWords": [
+    "oteltrace"
   ]
 }

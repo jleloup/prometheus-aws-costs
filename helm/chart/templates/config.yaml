@@ -13,6 +13,12 @@ metadata:
     {{- toYaml . }}
     {{- end }}
 data:
+    {{- if .Values.observability.otel.enabled }}
+    OTEL_EXPORTER_OTLP_ENDPOINT: {{ .Values.observability.otel.endpoint | quote }}
+    SERVICE_NAME: {{ include "self.common.name" . | quote }}
+    SERVICE_VERSION: {{ .Release.Revision | quote }}
+    TELEMETRY_ENABLED: "true"
+    {{- end }}
     {{- range $k, $v := .Values.config }}
     {{ $k }}: {{ quote (tpl (toString $v) $) }}
     {{- end }}

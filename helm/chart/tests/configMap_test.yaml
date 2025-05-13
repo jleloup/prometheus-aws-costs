@@ -1,0 +1,11 @@
+---
+suite: Test ConfigMap
+templates:
+  - config.yaml
+tests:
+  - it: creates ConfigMap
+    set:
+      config:
+        FAKE_VARIABLE: "test"
+    asserts:
+      - matchSnapshot: {}

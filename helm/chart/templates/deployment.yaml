@@ -62,7 +62,7 @@ spec:
           {{- end }}
           ports:
             - name: http-metrics
-              containerPort: {{ $.Values.observability.metricsPort }}
+              containerPort: {{ $.Values.observability.prometheus.metricsPort }}
           envFrom:
           - configMapRef:
               name: {{ include "self.common.name" . }}

@@ -36,10 +36,15 @@ config: {}
 
 # -- Configure observability
 observability:
-  enabled: true
-  metricsPort: "11223"
-  scrapeInterval: "10m"
-  path: "/metrics"
+  otel:
+    enabled: true
+    endpoint: ""
+
+  prometheus:
+    enabled: true
+    metricsPort: "11223"
+    scrapeInterval: "10m"
+    path: "/metrics"
 
 # -- Configure container
 container:

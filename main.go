@@ -4,64 +4,27 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"os"
 	"sync"
 	"time"
 
-	pacCostExplorer "prometheus-aws-costs/src/aws/costexplorer"
+	selfAws "prometheus-aws-costs/src/aws"
+	selfConfig "prometheus-aws-costs/src/utils/config"
+	selfOtel "prometheus-aws-costs/src/utils/otel"
 
 	awsConfig "github.com/aws/aws-sdk-go-v2/config"
 	awsCostexplorer "github.com/aws/aws-sdk-go-v2/service/costexplorer"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
-	"github.com/spf13/viper"
-	"go.opentelemetry.io/otel"
 )
-
-// Config for auth creds
-type Config struct {
-	LogLevel       string        `mapstructure:"log_level"`
-	MetricInterval time.Duration `mapstructure:"metric_interval"`
-	MetricsPath    string        `mapstructure:"metrics_path"`
-	MetricsPort    string        `mapstructure:"metrics_port"`
-}
-
-var tracer = otel.Tracer("prometheus-aws-costs/main")
-
-// Deal with configuration using environment variables,
-// default values and CLI
-func LoadConfig() (config Config, err error) {
-	v := viper.New()
-
-	// Load config
-	log.Debug().Msg("Loading environment variables...")
-	v.SetDefault("metric_interval", "30m")
-	v.SetDefault("metrics_path", "/metrics")
-	v.SetDefault("metrics_port", "11223")
-	v.SetDefault("log_level", "info")
-	v.AutomaticEnv()
-
-	err = v.Unmarshal(&config)
-
-	if err != nil {
-		log.Fatal().
-			Err(err).
-			Msg("Unable to unmarshal environment variables")
-	}
-
-	// Check configuration
-
-	if len(config.MetricsPort) == 0 {
-		log.Fatal().Msg("Unable to find Metrics Port")
-	}
-
-	return
-}
 
 func main() {
 
+	ctx := context.Background()
+
 	// Load configuration
-	config, err := LoadConfig()
+	config, err := selfConfig.LoadConfig()
 	if err != nil {
 		log.Fatal().
 			Err(err).
@@ -77,6 +40,14 @@ func main() {
 	}
 	zerolog.SetGlobalLevel(level)
 
+	// Setup telemetry
+	telemetry, err := selfOtel.NewTelemetry(ctx, config)
+	if err != nil {
+		log.Fatal().Msg("failed to load telemetry config")
+		os.Exit(1)
+	}
+	defer telemetry.Shutdown(ctx)
+
 	// Start Prometheus server
 	log.Info().
 		Str("path", config.MetricsPath).
@@ -89,7 +60,6 @@ func main() {
 	}()
 
 	// Setup AWS client
-	ctx := context.Background()
 	sdkConfig, err := awsConfig.LoadDefaultConfig(ctx)
 	if err != nil {
 		fmt.Println("Couldn't load default configuration. Have you set up your AWS account?")
@@ -98,18 +68,19 @@ func main() {
 	}
 	ceClient := awsCostexplorer.NewFromConfig(sdkConfig)
 
-	ceFetcher := pacCostExplorer.NewCEFetcher(ctx, *ceClient)
+	ceFetcher := selfAws.NewCEFetcher(ctx, *ceClient, telemetry)
 
 	// Loop on AWS queries
 	ticker := time.NewTicker(config.MetricInterval)
 	for ; true; <-ticker.C {
 		var wg sync.WaitGroup
-		_, span := tracer.Start(ctx, "refresh-metrics")
+		_, span := telemetry.TraceStart(ctx, "refresh-metrics")
 		defer span.End()
 
 		log.Debug().Msg("Refreshing AWS Cost explorer metrics")
 
-		ceFetcher.GetSavingPlansMetrics(ctx)
+		go ceFetcher.GetSavingPlansCoverageMetrics(ctx, &wg)
+		go ceFetcher.GetSavingPlansUtilizationMetrics(ctx, &wg)
 
 		wg.Wait()
 	}

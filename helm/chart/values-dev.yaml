@@ -1,9 +1,13 @@
 ---
 serviceAccount:
   annotations:
-    eks.amazonaws.com/role-arn: arn:aws:iam::906200835500:role/prometheus-aws-costs-eks-staging-01
+    eks.amazonaws.com/role-arn: arn:aws:iam::478295734518:role/prometheus-aws-costs-eks-prod-01
 
 config:
-  METRIC_INTERVAL: "30s"
+  METRIC_INTERVAL: "2m"
   LOG_LEVEL: "debug"
-  OTEL_EXPORTER_OTLP_ENDPOINT: "otel-agent-collector.telemetry.svc.cluster.local:4317"
+
+observability:
+  otel:
+    enabled: true
+    endpoint: "dns://otel-agent-collector.telemetry.svc.cluster.local:4317"
