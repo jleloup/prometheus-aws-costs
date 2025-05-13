@@ -57,7 +57,7 @@ func NewCEFetcher(context context.Context, client awsCostexplorer.Client, teleme
 
 func (e *CostExplorerFetcher) GetSavingPlansCoverageMetrics(ctx context.Context, wg *sync.WaitGroup) {
 
-	log.Debug().Msg("Get Saving Plans coverage metrics")
+	log.Info().Msg("Get Saving Plans coverage metrics")
 
 	wg.Add(1)
 	_, span := e.telemetry.TraceStart(ctx, "get-costexplorer-savingplans-coverage-metrics")
@@ -94,6 +94,7 @@ func (e *CostExplorerFetcher) GetSavingPlansCoverageMetrics(ctx context.Context,
 		GroupBy:     groupBy,
 		Metrics:     metrics,
 	})
+	costExplorerAPICalls.Inc()
 
 	if err != nil {
 
@@ -116,13 +117,11 @@ func (e *CostExplorerFetcher) GetSavingPlansCoverageMetrics(ctx context.Context,
 		// 	savingPlansCoverageTotalCommitment.Set(coverage.Total.Utilization.TotalCommitment)
 		// }
 	}
-
-	costExplorerAPICalls.Inc()
 }
 
 func (e *CostExplorerFetcher) GetSavingPlansUtilizationMetrics(ctx context.Context, wg *sync.WaitGroup) {
 
-	log.Debug().Msg("Get Saving Plans utilization metrics")
+	log.Info().Msg("Get Saving Plans utilization metrics")
 
 	wg.Add(1)
 	_, span := e.telemetry.TraceStart(ctx, "get-costexplorer-savingplans-utilization-metrics")
@@ -144,6 +143,7 @@ func (e *CostExplorerFetcher) GetSavingPlansUtilizationMetrics(ctx context.Conte
 		},
 		Granularity: granularity,
 	})
+	costExplorerAPICalls.Inc()
 
 	if err != nil {
 
@@ -195,6 +195,4 @@ func (e *CostExplorerFetcher) GetSavingPlansUtilizationMetrics(ctx context.Conte
 		}
 		span.SetStatus(codes.Ok, "Saving PLans utilization metrics fetched")
 	}
-
-	costExplorerAPICalls.Inc()
 }

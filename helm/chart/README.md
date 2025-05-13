@@ -18,7 +18,7 @@ A Helm chart to deploy Prometheus AWS Costs exporter in Kubernetes.
 | nameOverride | string | `""` |  |
 | nodeAffinity | object | `{}` |  |
 | nodeSelector | object | `{}` | Node selector for nodes to schedule the pod on |
-| observability | object | `{"otel":{"enabled":true,"endpoint":""},"prometheus":{"enabled":true,"metricsPort":"11223","path":"/metrics","scrapeInterval":"10m"}}` | Configure observability |
+| observability | object | `{"otel":{"enabled":true,"endpoint":""},"prometheus":{"enabled":true,"metricsPort":"11223","path":"/metrics","scrapeInterval":"1m"}}` | Configure observability |
 | replicaCount | int | `1` | Number of replicas to run |
 | resources | object | `{"limits":{"memory":"256Mi"},"requests":{"cpu":"50m","memory":"256Mi"}}` | Pod resources |
 | serviceAccount | object | `{"annotations":{}}` | Service Account configuration |
