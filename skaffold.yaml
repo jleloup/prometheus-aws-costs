@@ -1,0 +1,30 @@
+---
+apiVersion: skaffold/v4beta13
+kind: Config
+metadata:
+  name: prometheus-aws-costs
+build:
+  local:
+    push: true
+    useDockerCLI: true
+  tagPolicy:
+    gitCommit: {}
+  artifacts:
+    - image: docker.io/jleloup/prometheus-aws-costs
+      docker:
+        dockerfile: Dockerfile
+deploy:
+  helm:
+    releases:
+      - name: prometheus-aws-costs
+        chartPath: helm/chart
+        valuesFiles:
+          - helm/chart/values-dev.yaml
+        version: 0.1.0
+        namespace: monitoring-exporters
+        createNamespace: true
+        setValueTemplates:
+          global:
+            image:
+              repository: "{{.IMAGE_REPO_docker_io_jleloup_prometheus_aws_costs}}"
+              tag: "{{.IMAGE_TAG_docker_io_jleloup_prometheus_aws_costs}}@{{.IMAGE_DIGEST_docker_io_jleloup_prometheus_aws_costs}}"

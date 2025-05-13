@@ -1,0 +1,72 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "self.common.name" $ }}
+  labels:
+    {{- include "self.common.labels" $ | nindent 4 }}
+    {{- with $.Values.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+    app.kubernetes.io/component: {{ include "self.common.name" $ }}
+  annotations:
+    {{- with $.Values.annotations }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  revisionHistoryLimit: 0
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: '25%'
+      maxSurge: '25%'
+  selector:
+    matchLabels:
+      {{- include "self.common.matchLabels" $ | nindent 6 }}
+      app.kubernetes.io/component: {{ include "self.common.name" $ }}
+  template:
+    metadata:
+      {{- with .Values.annotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "self.common.labels" $ | nindent 8 }}
+        {{- with $.Values.labels }}
+        {{- toYaml . | nindent 8}}
+        {{- end }}
+        app.kubernetes.io/component: {{ include "self.common.name" $ }}
+    spec:
+      serviceAccountName: {{ include "self.common.name" $ }}
+      automountServiceAccountToken: false
+      {{- include "self.pod.securityContext" $ | indent 6 }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.nodeAffinity }}
+      affinity:
+        nodeAffinity:
+          {{- toYaml . | nindent 10 }}
+      {{- end }}
+      containers:
+        - name: {{ include "self.common.name" $ }}
+          image: {{ include "self.container.image"  (dict "name" "global" "context" $) }}
+          command: {{- toYaml .Values.container.commands | nindent 12 }}
+          {{- with .Values.container.args }}
+          args: {{- toYaml . | nindent 12 }}
+          {{- end }}
+          ports:
+            - name: http-metrics
+              containerPort: {{ $.Values.observability.prometheus.metricsPort }}
+          envFrom:
+          - configMapRef:
+              name: {{ include "self.common.name" . }}
+          resources:
+            {{- with .Values.resources }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}

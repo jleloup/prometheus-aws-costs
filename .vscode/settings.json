@@ -1,0 +1,11 @@
+{
+  "cSpell.words": [
+    "costexplorer",
+    "golangci",
+    "helmlint",
+    "promhttp"
+  ],
+  "cSpell.ignoreWords": [
+    "oteltrace"
+  ]
+}

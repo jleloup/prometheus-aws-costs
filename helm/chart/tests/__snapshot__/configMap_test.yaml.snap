@@ -1,0 +1,19 @@
+creates ConfigMap:
+  1: |
+    apiVersion: v1
+    data:
+      FAKE_VARIABLE: test
+      OTEL_EXPORTER_OTLP_ENDPOINT: ""
+      SERVICE_NAME: prometheus-aws-costs
+      SERVICE_VERSION: "0"
+      TELEMETRY_ENABLED: "true"
+    kind: ConfigMap
+    metadata:
+      annotations: null
+      labels:
+        app.kubernetes.io/instance: RELEASE-NAME-prometheus-aws-costs
+        app.kubernetes.io/managed-by: Helm
+        app.kubernetes.io/name: prometheus-aws-costs
+        app.kubernetes.io/version: 0.1.0
+        helm.sh/chart: prometheus-aws-costs-0.1.0
+      name: prometheus-aws-costs

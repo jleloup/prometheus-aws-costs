@@ -1,0 +1,61 @@
+---
+# -- Global values
+global:
+  # -- Image configuration
+  image:
+    repository: docker.io/jleloup/prometheus-aws-costs
+    tag: latest
+
+nameOverride: ""
+fullnameOverride: ""
+
+# -- Service Account configuration
+serviceAccount:
+  # -- Service Account annotations. Useful for IRSA.
+  annotations: {}
+
+# -- Number of replicas to run
+replicaCount: 1
+
+# -- Map of labels applied to all resources
+labels: {}
+
+# -- Map of annotations applied to all resources
+annotations: {}
+
+# -- Pod resources
+resources:
+  limits:
+    memory: 256Mi
+  requests:
+    cpu: 50m
+    memory: 256Mi
+
+# -- Prometheus AWS Costs configuration used as environment variable
+config: {}
+
+# -- Configure observability
+observability:
+  otel:
+    enabled: true
+    endpoint: ""
+
+  prometheus:
+    enabled: true
+    metricsPort: "11223"
+    scrapeInterval: "10m"
+    path: "/metrics"
+
+# -- Configure container
+container:
+  commands:
+    - "/go/bin/prometheus-aws-costs"
+
+# -- Node selector for nodes to schedule the pod on
+nodeSelector: {}
+
+# -- Tolerations to schedule the pod on tainted nodes
+tolerations: []
+
+## -- Node Affinity
+nodeAffinity: {}
