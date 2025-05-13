@@ -3,6 +3,7 @@ package costexplorer
 import (
 	"context"
 	"errors"
+	"strconv"
 	"sync"
 	"time"
 
@@ -10,18 +11,38 @@ import (
 
 	awsCostexplorer "github.com/aws/aws-sdk-go-v2/service/costexplorer"
 	"github.com/aws/aws-sdk-go-v2/service/costexplorer/types"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promauto"
 	"github.com/rs/zerolog/log"
 )
 
-type Statistics struct {
-	CostExplorerAPICall float64
-}
+var (
+	savingPlansUtilizationTotalCommitment = promauto.NewGauge(prometheus.GaugeOpts{
+		Name: "pac_savingplans_utilization_total_commitment_dollar",
+		Help: "Number of dollars purchased as saving plans.",
+	})
+	savingPlansUtilizationUnusedCommitment = promauto.NewGauge(prometheus.GaugeOpts{
+		Name: "pac_savingplans_utilization_unused_commitment_dollar",
+		Help: "Number of dollars unused by saving plans.",
+	})
+	savingPlansUtilizationUsedCommitment = promauto.NewGauge(prometheus.GaugeOpts{
+		Name: "pac_savingplans_utilization_used_commitment_dollar",
+		Help: "Number of dollars used by saving plans.",
+	})
+	savingPlansUtilizationPercentage = promauto.NewGauge(prometheus.GaugeOpts{
+		Name: "pac_savingplans_utilization_percent",
+		Help: "Percentage of saving plans utilization.",
+	})
+	costExplorerAPICalls = promauto.NewCounter(prometheus.CounterOpts{
+		Name: "pac_costexplorer_api_calls_total",
+		Help: "Number of calls to the AWS Cost Explorer API",
+	})
+)
 
 type CostExplorerFetcher struct {
-	ctx        context.Context
-	client     awsCostexplorer.Client
-	telemetry  *selfOtel.Telemetry
-	statistics Statistics
+	ctx       context.Context
+	client    awsCostexplorer.Client
+	telemetry *selfOtel.Telemetry
 }
 
 func NewCEFetcher(context context.Context, client awsCostexplorer.Client, telemetry *selfOtel.Telemetry) *CostExplorerFetcher {
@@ -31,10 +52,6 @@ func NewCEFetcher(context context.Context, client awsCostexplorer.Client, teleme
 		client:    client,
 		telemetry: telemetry,
 	}
-}
-
-func (r *CostExplorerFetcher) GetStatistics() Statistics {
-	return r.statistics
 }
 
 func (e *CostExplorerFetcher) GetSavingPlansCoverageMetrics(ctx context.Context, wg *sync.WaitGroup) {
@@ -92,9 +109,14 @@ func (e *CostExplorerFetcher) GetSavingPlansCoverageMetrics(ctx context.Context,
 		}
 	} else {
 		log.Debug().Interface("dict", output).Msg("Saving Plans coverage output")
+
+		// for _, coverage := range output.SavingsPlansCoverages {
+		// 	coverage.
+		// 	savingPlansCoverageTotalCommitment.Set(coverage.Total.Utilization.TotalCommitment)
+		// }
 	}
 
-	e.statistics.CostExplorerAPICall++
+	costExplorerAPICalls.Inc()
 }
 
 func (e *CostExplorerFetcher) GetSavingPlansUtilizationMetrics(ctx context.Context, wg *sync.WaitGroup) {
@@ -137,7 +159,36 @@ func (e *CostExplorerFetcher) GetSavingPlansUtilizationMetrics(ctx context.Conte
 		}
 	} else {
 		log.Debug().Interface("dict", output).Msg("Saving Plans utilization output")
+
+		// Extract metrics from output
+		totalCommitment, err := strconv.ParseFloat(*output.Total.Utilization.TotalCommitment, 64)
+		if err != nil {
+			log.Warn().Str("totalCommitment", *output.Total.Utilization.TotalCommitment).Msg("Cannot convert to float")
+		} else {
+			savingPlansUtilizationTotalCommitment.Set(totalCommitment)
+		}
+
+		unusedCommitment, err := strconv.ParseFloat(*output.Total.Utilization.UnusedCommitment, 64)
+		if err != nil {
+			log.Warn().Str("unusedCommitment", *output.Total.Utilization.UnusedCommitment).Msg("Cannot convert to float")
+		} else {
+			savingPlansUtilizationUnusedCommitment.Set(unusedCommitment)
+		}
+
+		usedCommitment, err := strconv.ParseFloat(*output.Total.Utilization.UsedCommitment, 64)
+		if err != nil {
+			log.Warn().Str("usedCommitment", *output.Total.Utilization.UsedCommitment).Msg("Cannot convert to float")
+		} else {
+			savingPlansUtilizationUsedCommitment.Set(usedCommitment)
+		}
+
+		percentUtilization, err := strconv.ParseFloat(*output.Total.Utilization.UtilizationPercentage, 64)
+		if err != nil {
+			log.Warn().Str("percentUtilization", *output.Total.Utilization.UtilizationPercentage).Msg("Cannot convert to float")
+		} else {
+			savingPlansUtilizationPercentage.Set(percentUtilization)
+		}
 	}
 
-	e.statistics.CostExplorerAPICall++
+	costExplorerAPICalls.Inc()
 }
