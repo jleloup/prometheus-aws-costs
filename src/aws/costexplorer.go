@@ -14,6 +14,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
 	"github.com/rs/zerolog/log"
+	"go.opentelemetry.io/otel/codes"
 )
 
 var (
@@ -164,6 +165,7 @@ func (e *CostExplorerFetcher) GetSavingPlansUtilizationMetrics(ctx context.Conte
 		totalCommitment, err := strconv.ParseFloat(*output.Total.Utilization.TotalCommitment, 64)
 		if err != nil {
 			log.Warn().Str("totalCommitment", *output.Total.Utilization.TotalCommitment).Msg("Cannot convert to float")
+			span.SetStatus(codes.Error, "Error while computing TotalCommitment")
 		} else {
 			savingPlansUtilizationTotalCommitment.Set(totalCommitment)
 		}
@@ -171,6 +173,7 @@ func (e *CostExplorerFetcher) GetSavingPlansUtilizationMetrics(ctx context.Conte
 		unusedCommitment, err := strconv.ParseFloat(*output.Total.Utilization.UnusedCommitment, 64)
 		if err != nil {
 			log.Warn().Str("unusedCommitment", *output.Total.Utilization.UnusedCommitment).Msg("Cannot convert to float")
+			span.SetStatus(codes.Error, "Error while computing UnusedCommitment")
 		} else {
 			savingPlansUtilizationUnusedCommitment.Set(unusedCommitment)
 		}
@@ -178,6 +181,7 @@ func (e *CostExplorerFetcher) GetSavingPlansUtilizationMetrics(ctx context.Conte
 		usedCommitment, err := strconv.ParseFloat(*output.Total.Utilization.UsedCommitment, 64)
 		if err != nil {
 			log.Warn().Str("usedCommitment", *output.Total.Utilization.UsedCommitment).Msg("Cannot convert to float")
+			span.SetStatus(codes.Error, "Error while computing UsedCommitment")
 		} else {
 			savingPlansUtilizationUsedCommitment.Set(usedCommitment)
 		}
@@ -185,9 +189,11 @@ func (e *CostExplorerFetcher) GetSavingPlansUtilizationMetrics(ctx context.Conte
 		percentUtilization, err := strconv.ParseFloat(*output.Total.Utilization.UtilizationPercentage, 64)
 		if err != nil {
 			log.Warn().Str("percentUtilization", *output.Total.Utilization.UtilizationPercentage).Msg("Cannot convert to float")
+			span.SetStatus(codes.Error, "Error while computing UtilizationPercentage")
 		} else {
 			savingPlansUtilizationPercentage.Set(percentUtilization)
 		}
+		span.SetStatus(codes.Ok, "Saving PLans utilization metrics fetched")
 	}
 
 	costExplorerAPICalls.Inc()
