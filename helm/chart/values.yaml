@@ -43,7 +43,7 @@ observability:
   prometheus:
     enabled: true
     metricsPort: "11223"
-    scrapeInterval: "10m"
+    scrapeInterval: "1m"
     path: "/metrics"
 
 # -- Configure container

@@ -77,7 +77,7 @@ func main() {
 		_, span := telemetry.TraceStart(ctx, "refresh-metrics")
 		defer span.End()
 
-		log.Debug().Msg("Refreshing AWS Cost explorer metrics")
+		log.Info().Msg("Refreshing AWS Cost explorer metrics")
 
 		go ceFetcher.GetSavingPlansCoverageMetrics(ctx, &wg)
 		go ceFetcher.GetSavingPlansUtilizationMetrics(ctx, &wg)
