@@ -6,6 +6,9 @@
     "promhttp"
   ],
   "cSpell.ignoreWords": [
-    "oteltrace"
+    "coveredcost",
+    "ondemandcost",
+    "oteltrace",
+    "totalcost"
   ]
 }
