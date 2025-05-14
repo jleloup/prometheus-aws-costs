@@ -34,6 +34,14 @@ var (
 		Name: "pac_savingplans_utilization_percent",
 		Help: "Percentage of saving plans utilization.",
 	})
+	savingPlansUtilizationNetSavings = promauto.NewGauge(prometheus.GaugeOpts{
+		Name: "pac_savingplans_utilization_netsavings_dollar",
+		Help: "Number of dollar saved by saving plans.",
+	})
+	savingPlansUtilizationOnDemandEquivalent = promauto.NewGauge(prometheus.GaugeOpts{
+		Name: "pac_savingplans_utilization_ondemand_equivalent_dollar",
+		Help: "Number of dollar you would have paid using on-demand.",
+	})
 	costExplorerAPICalls = promauto.NewCounter(prometheus.CounterOpts{
 		Name: "pac_costexplorer_api_calls_total",
 		Help: "Number of calls to the AWS Cost Explorer API",
@@ -193,6 +201,23 @@ func (e *CostExplorerFetcher) GetSavingPlansUtilizationMetrics(ctx context.Conte
 		} else {
 			savingPlansUtilizationPercentage.Set(percentUtilization)
 		}
-		span.SetStatus(codes.Ok, "Saving PLans utilization metrics fetched")
+
+		netSavings, err := strconv.ParseFloat(*output.Total.Savings.NetSavings, 64)
+		if err != nil {
+			log.Warn().Str("netSavings", *output.Total.Savings.NetSavings).Msg("Cannot convert to float")
+			span.SetStatus(codes.Error, "Error while computing NetSavings")
+		} else {
+			savingPlansUtilizationNetSavings.Set(netSavings)
+		}
+
+		onDemandEquivalent, err := strconv.ParseFloat(*output.Total.Savings.OnDemandCostEquivalent, 64)
+		if err != nil {
+			log.Warn().Str("onDemandCostEquivalent", *output.Total.Savings.OnDemandCostEquivalent).Msg("Cannot convert to float")
+			span.SetStatus(codes.Error, "Error while computing OnDemandCostEquivalent")
+		} else {
+			savingPlansUtilizationOnDemandEquivalent.Set(onDemandEquivalent)
+		}
+
+		span.SetStatus(codes.Ok, "Saving Plans utilization metrics fetched")
 	}
 }
