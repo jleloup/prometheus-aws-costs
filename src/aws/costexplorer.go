@@ -18,6 +18,22 @@ import (
 )
 
 var (
+	savingPlansCoveragePercentage = promauto.NewGaugeVec(prometheus.GaugeOpts{
+		Name: "pac_savingplans_coverage_percent",
+		Help: "Percentage of cost covered by Saving Plans",
+	}, []string{"aws_instance_type_family", "aws_region", "aws_service"})
+	savingPlansCoverageOnDemandCost = promauto.NewGaugeVec(prometheus.GaugeOpts{
+		Name: "pac_savingplans_coverage_ondemandcost_dollar",
+		Help: "Cost for On Demand in Dollars",
+	}, []string{"aws_instance_type_family", "aws_region", "aws_service"})
+	savingPlansCoverageSpendCoveredBySavingsPlans = promauto.NewGaugeVec(prometheus.GaugeOpts{
+		Name: "pac_savingplans_coverage_coveredcost_dollar",
+		Help: "Number of dollar covered by Saving Plans",
+	}, []string{"aws_instance_type_family", "aws_region", "aws_service"})
+	savingPlansCoverageTotalCost = promauto.NewGaugeVec(prometheus.GaugeOpts{
+		Name: "pac_savingplans_coverage_totalcost_dollar",
+		Help: "total cost spent on AWS regardless of Saving Plans",
+	}, []string{"aws_instance_type_family", "aws_region", "aws_service"})
 	savingPlansUtilizationTotalCommitment = promauto.NewGauge(prometheus.GaugeOpts{
 		Name: "pac_savingplans_utilization_total_commitment_dollar",
 		Help: "Number of dollars purchased as saving plans.",
@@ -92,38 +108,98 @@ func (e *CostExplorerFetcher) GetSavingPlansCoverageMetrics(ctx context.Context,
 	}
 	metrics := []string{"SpendCoveredBySavingsPlans"}
 
-	output, err := e.client.GetSavingsPlansCoverage(ctx, &awsCostexplorer.GetSavingsPlansCoverageInput{
-		TimePeriod: &types.DateInterval{
-			Start: &startStr,
-			End:   &endStr,
-		},
-		MaxResults:  &maxResult,
-		Granularity: granularity,
-		GroupBy:     groupBy,
-		Metrics:     metrics,
-	})
-	costExplorerAPICalls.Inc()
+	var nextToken *string = nil
 
-	if err != nil {
+	for {
+		output, err := e.client.GetSavingsPlansCoverage(ctx, &awsCostexplorer.GetSavingsPlansCoverageInput{
+			TimePeriod: &types.DateInterval{
+				Start: &startStr,
+				End:   &endStr,
+			},
+			MaxResults:  &maxResult,
+			Granularity: granularity,
+			GroupBy:     groupBy,
+			Metrics:     metrics,
+			NextToken:   nextToken,
+		})
+		if err != nil {
 
-		var dataEx *types.DataUnavailableException
+			var dataEx *types.DataUnavailableException
 
-		if errors.As(err, &dataEx) {
-			log.Info().
-				Err(err).
-				Msg("No Saving Plans coverage found")
+			if errors.As(err, &dataEx) {
+				log.Info().
+					Err(err).
+					Msg("No Saving Plans utilization found")
+			} else {
+				log.Error().
+					Err(err).
+					Msg("Cannot fetch Saving Plans utilization")
+			}
+			break
 		} else {
-			log.Error().
-				Err(err).
-				Msg("Cannot fetch Saving Plans coverage")
-		}
-	} else {
-		log.Debug().Interface("dict", output).Msg("Saving Plans coverage output")
+			costExplorerAPICalls.Inc()
 
-		// for _, coverage := range output.SavingsPlansCoverages {
-		// 	coverage.
-		// 	savingPlansCoverageTotalCommitment.Set(coverage.Total.Utilization.TotalCommitment)
-		// }
+			// Process SavingPlansCoverage items
+			for _, item := range output.SavingsPlansCoverages {
+				log.Debug().Interface("coverage", item).Msg("Output from GetSavingsPlansCoverage")
+
+				// Fetch attributes for labels
+				instance_type_family := item.Attributes["INSTANCE_TYPE_FAMILY"]
+				region := item.Attributes["REGION"]
+				service := item.Attributes["SERVICE"]
+
+				// Saving plan coverage percentage
+				coveragePercentage, err := strconv.ParseFloat(*item.Coverage.CoveragePercentage, 64)
+				if err != nil {
+					log.Warn().Str("coveragePercentage", *item.Coverage.CoveragePercentage).Msg("Cannot convert to float")
+					span.SetStatus(codes.Error, "Error while computing CoveragePercentage")
+				} else {
+					savingPlansCoveragePercentage.WithLabelValues(
+						instance_type_family, region, service,
+					).Set(coveragePercentage)
+				}
+
+				// On Demand cost
+				onDemandCost, err := strconv.ParseFloat(*item.Coverage.OnDemandCost, 64)
+				if err != nil {
+					log.Warn().Str("onDemandCost", *item.Coverage.OnDemandCost).Msg("Cannot convert to float")
+					span.SetStatus(codes.Error, "Error while computing OnDemandCost")
+				} else {
+					savingPlansCoverageOnDemandCost.WithLabelValues(
+						instance_type_family, region, service,
+					).Set(onDemandCost)
+				}
+
+				// Cost covered by saving plans
+				coveredCost, err := strconv.ParseFloat(*item.Coverage.SpendCoveredBySavingsPlans, 64)
+				if err != nil {
+					log.Warn().Str("coveredCost", *item.Coverage.SpendCoveredBySavingsPlans).Msg("Cannot convert to float")
+					span.SetStatus(codes.Error, "Error while computing SpendCoveredBySavingsPlans")
+				} else {
+					savingPlansCoverageSpendCoveredBySavingsPlans.WithLabelValues(
+						instance_type_family, region, service,
+					).Set(coveredCost)
+				}
+
+				// Total cost regardless of Saving plans
+				totalCost, err := strconv.ParseFloat(*item.Coverage.TotalCost, 64)
+				if err != nil {
+					log.Warn().Str("totalCost", *item.Coverage.TotalCost).Msg("Cannot convert to float")
+					span.SetStatus(codes.Error, "Error while computing TotalCost")
+				} else {
+					savingPlansCoverageTotalCost.WithLabelValues(
+						instance_type_family, region, service,
+					).Set(totalCost)
+				}
+			}
+
+			if output.NextToken == nil {
+				break // No more pages
+			}
+
+			nextToken = output.NextToken
+
+		}
 	}
 }
 
@@ -167,7 +243,7 @@ func (e *CostExplorerFetcher) GetSavingPlansUtilizationMetrics(ctx context.Conte
 				Msg("Cannot fetch Saving Plans utilization")
 		}
 	} else {
-		log.Debug().Interface("dict", output).Msg("Saving Plans utilization output")
+		log.Debug().Interface("utilizationOutput", output).Msg("Saving Plans utilization output")
 
 		// Extract metrics from output
 		totalCommitment, err := strconv.ParseFloat(*output.Total.Utilization.TotalCommitment, 64)
